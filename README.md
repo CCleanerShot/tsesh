@@ -15,3 +15,21 @@ then select a directory item and start a tmux session at that path.
 Simple start then I will see how I can add what I want it to do little by
 little.
 
+The more I think about this the more I feel like I do want a terminal
+sessionizer lol, I need to learn more about tmux.
+
+Things I want to do:
+
+- [ ] if i am on a dir and I just want to go to a scratch session I have been
+  creating a new window and then cd-ing into ~/code. I have all of my scratch
+  repos and sample files in there. When I want to test something it is always
+  the same place so find something for that
+
+I want to use [charmbracelet](https://github.com/charmbracelet/bubbletea) for
+the ui so I should look at the following:
+
+- example for exec (will be useful for executing the tmux command)
+- example for composable views (useful for tui dashboard)
+- example for auto complete (might be useful for filtering??, i do think that
+  good smart filtering is going to be a bit hard and will require some good
+  thought) for now I will leave it as simple list picker 

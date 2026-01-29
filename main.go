@@ -2,35 +2,16 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
-func expandPath(path string) (string, error) {
-	if strings.HasPrefix(path, "~") {
-		h, err := os.UserHomeDir()
-		if err != nil {
-			return h, err
-		}
-		return filepath.Join(h, path[1:]), err
-	}
-	return path, nil
-}
 
 func main() {
-	searchPaths := []string{
-		"~/projects",
-		"~/code",
-	}
-
-	for _, path := range searchPaths {
-		p, _ := expandPath(path)
-		dirEntries, _:= os.ReadDir(p)
-
-		fmt.Printf("directories for %s\n", p)
-		for _, entry := range dirEntries {
-			fmt.Printf("- %s\n", entry.Name())
-		}
+	// depending on what is passed then do different actions
+	// for now I will just do the file picker that start a tmux session in a specific directory
+	p := tea.NewProgram(newModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("error from running model: %v\n", err)
 	}
 }
