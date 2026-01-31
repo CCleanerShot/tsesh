@@ -6,14 +6,6 @@ import (
 	"github.com/e-mar404/tsesh/tmux"
 )
 
-type TmuxMsg error
-
-func TmuxError(err error) (func() tea.Msg) {
-	return func() tea.Msg {
-		return TmuxMsg(err)
-	}
-}
-
 // Wrapper for list.Item to add extra fields
 type Item struct {
 	Name string
@@ -35,7 +27,6 @@ func (i Item) Description() string {
 
 type Picker struct {
 	list list.Model
-	info string
 }
 
 func (p Picker) Init() tea.Cmd {
@@ -43,8 +34,7 @@ func (p Picker) Init() tea.Cmd {
 }
 
 func (p Picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
-
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		p.list.SetSize(msg.Width, msg.Height)
@@ -63,39 +53,28 @@ func (p Picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch tmux.HasSession(choice.Name) {
 			case true:
 				if tmux.Inside() {
-					err := tmux.SwitchClient(choice.Name)
-					cmds = append(cmds, TmuxError(err))
+					tmux.SwitchClient(choice.Name)
+					return p, nil
 				}
-				err := tmux.Attach(choice.Name)
-				cmds = append(cmds, TmuxError(err))
+				tmux.Attach(choice.Name)
 
 			case false:
 				if tmux.Inside() {
-					err := tmux.NewSession(choice.Name, choice.Path, true)
-					cmds = append(cmds, TmuxError(err))
-					err = tmux.SwitchClient(choice.Name)
-					cmds = append(cmds, TmuxError(err))
+					tmux.NewSession(choice.Name, choice.Path, true)
+					tmux.SwitchClient(choice.Name)
+					return p, nil
 				}
-				err := tmux.NewSession(choice.Name, choice.Path, false)
-				cmds = append(cmds, TmuxError(err))
+				tmux.NewSession(choice.Name, choice.Path, false)
 			}
 		}
-	case TmuxMsg:
-		p.info = string(msg.Error())
 	}
 
-	var cmd tea.Cmd
 	p.list, cmd = p.list.Update(msg)
-	cmds = append(cmds, cmd)
 	
-	return p, tea.Batch(cmds...)
+	return p, cmd
 }
 
 func (p Picker) View() string {
-	if p.info != "" {
-		return p.info
-	}
-
 	return p.list.View()
 }
 

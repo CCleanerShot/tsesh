@@ -20,6 +20,7 @@ func expandPath(path string) string {
 }
 
 // TODO: pull config and ignore any dirs that dont need to be pulled
+// TODO: add sanitize step to get rid of . and ~ in the name since session names cant have that
 func findDirectories(searchPaths []string) []list.Item {
 	dirList := []list.Item{}
 	for _, root := range searchPaths {
