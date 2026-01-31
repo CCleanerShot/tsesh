@@ -1,4 +1,4 @@
-package main
+package picker
 
 import (
 	"fmt"
@@ -33,9 +33,9 @@ func findDirectories(searchPaths []string) []list.Item {
 				return nil
 			}
 
-			item := item{
-				name: d.Name(), // use utils to get directory name
-				path: path, 
+			item := Item{
+				Name: d.Name(), // use utils to get directory name
+				Path: path, 
 			}
 			dirList = append(dirList, item)
 

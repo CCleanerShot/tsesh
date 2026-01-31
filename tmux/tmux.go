@@ -37,7 +37,7 @@ func SwitchClient(sessionName string) error {
 func NewSession(sessionName, workingDirectory string, detached bool) error {
 	conditionalDetached := ""
 	if detached {
-		conditionalDetached = "d"
+		conditionalDetached = "-d"
 	}
 
 	cmd := tmux(

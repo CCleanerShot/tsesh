@@ -1,16 +1,7 @@
 package main
 
-import (
-	"fmt"
-	"os"
-
-	tea "github.com/charmbracelet/bubbletea"
-)
+import "github.com/e-mar404/tsesh/cmd"
 
 func main() {
-	p := tea.NewProgram(newPicker(), tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
+	cmd.Execute()
 }
