@@ -9,6 +9,9 @@ import (
 
 // TODO: ideas
 // check out session groups and see if I can implement a shortcut to add a new session to a group
+
+var cmdRunner = exec.Command
+
 type TmuxMsg struct { Err error }
 
 // Checked environment variable $TMUX to determine if user is currently inside a tmux session
@@ -58,7 +61,7 @@ func NewSession(sessionName, workingDirectory string, detached bool) tea.Cmd {
 }
 
 func tmux(args... string) *exec.Cmd {
-	cmd := exec.Command("tmux", args...)
+	cmd := cmdRunner("tmux", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
