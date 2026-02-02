@@ -7,16 +7,16 @@ import (
 )
 
 func TestHasSessionArgs(t *testing.T) {
-	cmdRunner = mockCommandWithExitCode(0)
+	cmdRunner = mockCommand()
 	HasSession("test")
 	expectedArgs := []string{"has-session", "-t", "test"}
 	if !reflect.DeepEqual(capturedArgs, expectedArgs) {
-		argsNotMatching(t, expectedArgs, capturedArgs)
+		failArgsDoNotMatch(t, expectedArgs, capturedArgs)
 	}
 }
 
 func TestHasSessionExists(t *testing.T) {
-	cmdRunner = mockCommandWithExitCode(0)
+	cmdRunner = mockCommand()
 	found := HasSession("existing_session")
 	if !found {
 		fmt.Printf("expected session to be found if return code is 0\n")
@@ -25,7 +25,9 @@ func TestHasSessionExists(t *testing.T) {
 }
 
 func TestHasSessionDoesNotExist(t *testing.T) {
-	cmdRunner = mockCommandWithExitCode(1)
+	cmdRunner = mockCommand(
+		withExitCodeOne,
+	)
 	found := HasSession("non_existing_session")
 	if found {
 		fmt.Printf("expected session to not be found if return code is 1\n")

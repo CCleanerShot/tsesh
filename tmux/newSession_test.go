@@ -20,10 +20,10 @@ NewSession:
 */
 
 func TestNewSessionArgs(t *testing.T) {
-	cmdRunner = mockCommandWithExitCode(0)
+	cmdRunner = mockCommand()
 	NewSession("test1", "/path/to/test1", false)
 	expectedArgs := []string{"new-session", "-s", "test1", "-c", "/path/to/test1"}
 	if !reflect.DeepEqual(expectedArgs, capturedArgs) {
-		argsNotMatching(t, expectedArgs, capturedArgs)
+		failArgsDoNotMatch(t, expectedArgs, capturedArgs)
 	}
 }

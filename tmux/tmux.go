@@ -1,6 +1,7 @@
 package tmux
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 
@@ -10,14 +11,15 @@ import (
 // TODO: ideas
 // check out session groups and see if I can implement a shortcut to add a new session to a group
 
-var cmdRunner = exec.Command
-
 type TmuxMsg struct { Err error }
+
+var cmdRunner = exec.Command
+var ErrNestedSession = errors.New("sessions should be nested with care, unset $TMUX to force")
 
 // Checked environment variable $TMUX to determine if user is currently inside a tmux session
 func Inside() bool {
-	_, inside := os.LookupEnv("TMUX")
-	return inside 
+	val, _ := os.LookupEnv("TMUX")
+	return val == "" 
 }
 
 // Checks if a session already exists in tmux server
@@ -29,6 +31,13 @@ func HasSession(targetSession string) bool {
 
 // Attach session if outside of tmux
 func Attach(sessionName string) tea.Cmd {
+	/* 
+	Should really think if there should be an assert that it is not a nested session here since it is not allowed by default and that is how Im going to be using it
+	*/
+	if Inside() {
+		return nestedSessionsNotAllowed
+	}
+
 	return tea.ExecProcess(
 		tmux("attach-session", "-t", sessionName),
 		execCallback,
@@ -82,5 +91,11 @@ func tmux(args... string) *exec.Cmd {
 func execCallback(err error) tea.Msg {
 	return TmuxMsg {
 		Err: err,
+	}
+}
+
+func nestedSessionsNotAllowed() tea.Msg {
+	return TmuxMsg {
+		Err: ErrNestedSession,
 	}
 }
