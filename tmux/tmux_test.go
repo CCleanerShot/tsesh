@@ -4,43 +4,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"reflect"
+	"strconv"
 	"testing"
 )
 
-var capturedArgs []string
-
-func TestMain(m *testing.M) {
-	if os.Getenv("GO_WANT_HELPER_PROCESS") == "1" {
-		os.Exit(0)
-	}
-
-	os.Exit(m.Run())
-}
-
-func TestHasSessionArgs(t *testing.T) {
-	cmdRunner = mockCommandWithExitCode(0)
-	HasSession("test")
-	expectedArgs := []string{"has-session", "-t", "test"}
-	if !reflect.DeepEqual(capturedArgs, expectedArgs) {
-		fmt.Println("arguments passes to tmux do not match")
-		fmt.Printf("expected: %v, got:%v\n", expectedArgs, capturedArgs)
-		t.FailNow()
-	}
-}
-
 /* 
-HasSession:
-	✓ TestHasSessionArgs
-	- TestHasSessionExists
-	- TestHasSessionDoesNotExist
-
-NewSession:
-	- TestNewSessionArgs 
-	- TestNewSessionOutsideTmux
-	- TestNewSessionInsideTmux
-	- TestNewSessionExists
-	- TestNewSessionDoesNotExist
 
 Attach:
 	- TestAttachArgs
@@ -57,6 +25,17 @@ SwitchClient:
 	- TestSwitchClientDoesNotExist
 */
 
+var capturedArgs []string
+
+func TestMain(m *testing.M) {
+	if os.Getenv("GO_WANT_HELPER_PROCESS") == "1" {
+		exitCode, _ := strconv.Atoi(os.Getenv("MOCK_CMD_EXIT_CODE"))
+		os.Exit(exitCode)
+	}
+
+	os.Exit(m.Run())
+}
+
 func mockCommandWithExitCode(exitCode int) (func(string, ...string) *exec.Cmd) {
 	return func(command string, args...string) *exec.Cmd {
 		testBinary := os.Args[0]
@@ -70,4 +49,10 @@ func mockCommandWithExitCode(exitCode int) (func(string, ...string) *exec.Cmd) {
 		}
 		return cmd
 	}
+}
+
+func argsNotMatching(t *testing.T, expectedArgs, capturedArgs []string) {
+	fmt.Println("arguments passes to tmux do not match")
+	fmt.Printf("expected: %v, got:%v\n", expectedArgs, capturedArgs)
+	t.FailNow()
 }

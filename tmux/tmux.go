@@ -44,12 +44,23 @@ func SwitchClient(sessionName string) tea.Cmd {
 }
 
 // New session will be created with specified name at provided workingDirectory
+/*
+TODO:
+needs to be re written to account if it is inside tmux or not
+if it is inside tmux then return a sequence of new-session (detached) and then switch-client but if it is outside tmux then just new-session (not detached)
+
+This way on picker.go if there is no existing session it can just call tmux.NewSession()
+
+This will change how it is tested so I will leave that till the end, the other ones are free to create tests for since those do not need this much conditional branching
+*/
 func NewSession(sessionName, workingDirectory string, detached bool) tea.Cmd {
+	// use Inside() instead of detached to determine how it is ran
 	sessionFlags := "-s"
 	if detached {
 		sessionFlags = "-ds"
 	}
 
+	// use a cmds []tea.Cmd that will append appropriate cmds based on Inside() 
 	return tea.ExecProcess(
 		tmux(
 			"new-session",
