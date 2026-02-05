@@ -21,6 +21,13 @@ SwitchClient:
 	- TestSwitchClientInsideTmux
 	- TestSwitchClientExist
 	- TestSwitchClientDoesNotExist
+
+NewSession:
+	✓ TestNewSessionArgs
+	- TestNewSessionOutsideTmux
+	- TestNewSessionInsideTmux
+	- TestNewSessionExists
+	- TestNewSessionDoesNotExist
 */
 
 /*
@@ -30,21 +37,21 @@ Taking inspiration from bubbletea/exec_test.go of making a small tea program to 
 type mockOption func(*exec.Cmd) *exec.Cmd
 type execCommand func(string, ...string) *exec.Cmd
 type model struct {
-	sessionName string
-	testCmd func(args...string) tea.Cmd
+	testCmd func () tea.Cmd 
 	Err error
 }
 type tmuxTest struct {
 	cmdRunner execCommand
 	sessionName string
-	testCmd func(args...string) tea.Cmd
+	testCmd func () tea.Cmd
+	expectedArgs []string
 	expectedErr error
 }
 
 var capturedArgs []string
 
 func (m model) Init() tea.Cmd {
-	return m.testCmd(m.sessionName) 
+	return m.testCmd()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -77,13 +84,32 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestAttachArgs(t *testing.T) {
+func TestArgs(t *testing.T) {
 	t.Setenv("TMUX", "")
-	cmdRunner = mockCommand()
-	Attach("test-attach")
-	expectedArgs := []string {"attach-session", "-t", "test-attach"}
-	if !reflect.DeepEqual(expectedArgs, capturedArgs) {
-		failArgsDoNotMatch(t, expectedArgs, capturedArgs)
+	tt := []tmuxTest {
+		{
+			cmdRunner: mockCommand(),
+			testCmd: func() tea.Cmd {
+				return Attach("test-attach-args")
+			},
+			expectedArgs: []string {"attach-session", "-t", "test-attach-args"},
+		},
+		{
+			cmdRunner: mockCommand(),
+			testCmd: func() tea.Cmd {
+				return NewSession("test1", "/path/to/test1", false)
+			},
+			expectedArgs: []string{"new-session", "-s", "test1", "-c", "/path/to/test1"},
+		},
+	}
+
+	for _, tc := range tt {
+		cmdRunner = tc.cmdRunner
+		tc.testCmd()
+
+		if !reflect.DeepEqual(tc.expectedArgs, capturedArgs) {
+			failArgsDoNotMatch(t, tc.expectedArgs, capturedArgs)
+		}
 	}
 }
 
@@ -94,9 +120,9 @@ func TestInsideTmux(t *testing.T) {
 	tt := []tmuxTest {
 		{
 			cmdRunner: mockCommand(),
-			sessionName: "attach inside tmux",
-			testCmd: func(args...string) tea.Cmd {
-				return Attach(args[0])
+			sessionName: "attach-inside-tmux",
+			testCmd: func() tea.Cmd {
+				return Attach("attach-inside-tmux")
 			},
 			expectedErr: ErrNestedSession,
 		},
@@ -105,7 +131,6 @@ func TestInsideTmux(t *testing.T) {
 	for _, tc := range tt {
 		cmdRunner = tc.cmdRunner 
 		initModel := model {
-			sessionName: tc.sessionName,
 			testCmd: tc.testCmd,
 		}
 
@@ -127,20 +152,18 @@ func TestOutsideTmux(t *testing.T) {
 	tt := []tmuxTest {
 		{
 			cmdRunner: mockCommand(),
-			testCmd: func(args...string) tea.Cmd {
-				return Attach(args[0])
+			testCmd: func() tea.Cmd {
+				return Attach("attach-existing-session")
 			},
-			sessionName: "attach-existing-session",
 			expectedErr: nil,
 		},
 		{
 			cmdRunner: mockCommand(
 				withNonExistingSession,
 			),
-			testCmd: func(args...string) tea.Cmd {
-				return Attach(args[0])
+			testCmd: func() tea.Cmd {
+				return Attach("atttach-non-existing-session")
 			},
-			sessionName: "attach-non-existing-session",
 			expectedErr: ErrSessionNotFound, 
 		},
 	}
@@ -149,7 +172,6 @@ func TestOutsideTmux(t *testing.T) {
 	for _, tc := range tt {
 		cmdRunner = tc.cmdRunner
 		initModel := model {
-			sessionName: tc.sessionName,
 			testCmd: tc.testCmd,
 		}
 
@@ -196,6 +218,10 @@ func withExitCodeOne(cmd *exec.Cmd) *exec.Cmd {
 
 func withNonExistingSession(cmd *exec.Cmd) *exec.Cmd {
 	cmd.Err = fmt.Errorf("can't find session") 
+	return cmd
+}
+
+func withOutsideTmuxEnv(cmd *exec.Cmd) *exec.Cmd {
 	return cmd
 }
 
