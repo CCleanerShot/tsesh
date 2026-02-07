@@ -62,11 +62,11 @@ func (p Picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case false:
 				if tmux.Inside() {
 					return p, tea.Sequence(
-						tmux.NewSession(choice.SessionName, choice.Path, true),
+						tmux.NewSession(choice.SessionName, choice.Path),
 						tmux.SwitchClient(choice.SessionName),
 					)
 				}
-				return p, tmux.NewSession(choice.SessionName, choice.Path, false)
+				return p, tmux.NewSession(choice.SessionName, choice.Path)
 			}
 		}
 	

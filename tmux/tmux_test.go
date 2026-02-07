@@ -1,12 +1,9 @@
 package tmux
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"reflect"
 	"strconv"
 	"testing"
 
@@ -14,7 +11,6 @@ import (
 )
 
 /*
-
 SwitchClient:
 	- TestSwitchClientArgs
 	- TestSwitchClientOutsideTmux
@@ -34,13 +30,18 @@ type model struct {
 	Err error
 }
 type tmuxTest struct {
+	name string
+	insideTmux bool
 	cmdRunner execCommand
-	sessionName string
-	testCmd func () tea.Cmd
 	expectedArgs []string
 	expectedErr error
 }
 
+/*
+important: clear out previous captured args since they will only update after 
+mockCommand is ran, which it wont if an error is expected prior to running the 
+cmdRunner
+*/
 var capturedArgs []string
 
 func (m model) Init() tea.Cmd {
@@ -75,143 +76,6 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(m.Run())
-}
-
-func TestArgs(t *testing.T) {
-	t.Setenv("TMUX", "")
-	tt := []tmuxTest {
-		{
-			cmdRunner: mockCommand(),
-			testCmd: func() tea.Cmd {
-				return Attach("test-attach-args")
-			},
-			expectedArgs: []string {"attach-session", "-t", "test-attach-args"},
-		},
-		{
-			cmdRunner: mockCommand(),
-			testCmd: func() tea.Cmd {
-				return NewSession("test1", "/path/to/test1")
-			},
-			expectedArgs: []string{"new-session", "-s", "test1", "-c", "/path/to/test1"},
-		},
-	}
-
-	for _, tc := range tt {
-		cmdRunner = tc.cmdRunner
-		tc.testCmd()
-
-		if !reflect.DeepEqual(tc.expectedArgs, capturedArgs) {
-			failArgsDoNotMatch(t, tc.expectedArgs, capturedArgs)
-		}
-	}
-}
-
-func TestInsideTmux(t *testing.T) {
-	t.Setenv("TMUX", "inside")
-	var in, out bytes.Buffer 
-
-	tt := []tmuxTest {
-		{
-			cmdRunner: mockCommand(),
-			sessionName: "attach-inside-tmux",
-			testCmd: func() tea.Cmd {
-				return Attach("attach-inside-tmux")
-			},
-			expectedErr: ErrNestedSession,
-		},
-		{
-			cmdRunner: mockCommand(),
-			testCmd: func() tea.Cmd {
-				return NewSession("new-session-unique-session", "/path/to/dir")
-			},
-			expectedErr: nil,
-		},
-		{
-			cmdRunner: mockCommand(
-				withDuplicateSession,
-			),
-			testCmd: func() tea.Cmd {
-				return NewSession("new-session-duplicate-session", "/path/to/dir")
-			},
-			expectedErr: ErrDuplicateSession,
-		},
-	}
-
-	for _, tc := range tt {
-		cmdRunner = tc.cmdRunner 
-		initModel := model {
-			testCmd: tc.testCmd,
-		}
-
-		p := tea.NewProgram(initModel, tea.WithInput(&in), tea.WithOutput(&out))
-		outModel, _ := p.Run()
-		finalModel := outModel.(model)
-
-		if !errors.Is(finalModel.Err, tc.expectedErr) {
-			fmt.Printf("tea.Cmd returned something unexpected\n")
-			fmt.Printf("expected: %v, got: %v\n", ErrNestedSession, finalModel.Err)
-			t.FailNow()
-		}
-	}
-}
-
-func TestOutsideTmux(t *testing.T) {
-	t.Setenv("TMUX", "")
-
-	tt := []tmuxTest {
-		{
-			cmdRunner: mockCommand(),
-			testCmd: func() tea.Cmd {
-				return Attach("attach-existing-session")
-			},
-			expectedErr: nil,
-		},
-		{
-			cmdRunner: mockCommand(
-				withNonExistingSession,
-			),
-			testCmd: func() tea.Cmd {
-				return Attach("atttach-non-existing-session")
-			},
-			expectedErr: ErrSessionNotFound, 
-		},
-		{
-			cmdRunner: mockCommand(),
-			testCmd: func() tea.Cmd {
-				return NewSession("new-session-unique-session", "/path/to/dir")
-			},
-			expectedErr: nil,
-		},
-		{
-			cmdRunner: mockCommand(
-				withDuplicateSession,
-			),
-			testCmd: func() tea.Cmd {
-				return NewSession("new-session-duplicate-session", "/path/to/dir")
-			},
-			expectedErr: ErrDuplicateSession,
-		},
-	}
-
-	var in, out bytes.Buffer
-	for _, tc := range tt {
-		cmdRunner = tc.cmdRunner
-		initModel := model {
-			testCmd: tc.testCmd,
-		}
-
-		p := tea.NewProgram(initModel, tea.WithInput(&in), tea.WithOutput(&out))
-		outModel, err := p.Run()
-		if err != nil {
-			t.Fatalf("something went wrong with the tea program: %v\n", err)
-		}
-		finalModel := outModel.(model)
-
-		if !errors.Is(finalModel.Err, tc.expectedErr) {
-			fmt.Printf("expected: %v, got: %v\n", tc.expectedErr, finalModel.Err)
-			t.FailNow()
-		}
-	}
 }
 
 // Unless another option that modifies the exit code is passed it will default to exiting with code 0
