@@ -34,6 +34,7 @@ type tmuxTest struct {
 	insideTmux bool
 	cmdRunner execCommand
 	expectedArgs []string
+	expectedRes any 
 	expectedErr error
 }
 
@@ -98,6 +99,11 @@ func mockCommand(mockOpts...mockOption) execCommand {
 
 		return cmd
 	}
+}
+
+func withExitCodeone(cmd *exec.Cmd) *exec.Cmd {
+	cmd.Env = append(cmd.Env, "MOCK_CMD_EXIT_CODE=1")
+	return cmd
 }
 
 func withNonExistingSession(cmd *exec.Cmd) *exec.Cmd {

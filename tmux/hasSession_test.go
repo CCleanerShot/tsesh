@@ -1,37 +1,43 @@
 package tmux
-//
-// import (
-// 	"fmt"
-// 	"reflect"
-// 	"testing"
-// )
-//
-// func TestHasSessionArgs(t *testing.T) {
-// 	cmdRunner = mockCommand()
-// 	HasSession("test")
-// 	expectedArgs := []string{"has-session", "-t", "test"}
-// 	if !reflect.DeepEqual(capturedArgs, expectedArgs) {
-// 		failArgsDoNotMatch(t, expectedArgs, capturedArgs)
-// 	}
-// }
-//
-// func TestHasSessionExists(t *testing.T) {
-// 	cmdRunner = mockCommand()
-// 	found := HasSession("existing_session")
-// 	if !found {
-// 		fmt.Printf("expected session to be found if return code is 0\n")
-// 		t.FailNow()
-// 	}
-// }
-//
-// func TestHasSessionDoesNotExist(t *testing.T) {
-// 	cmdRunner = mockCommand(
-// 		withExitCodeOne,
-// 	)
-// 	found := HasSession("non_existing_session")
-// 	if found {
-// 		fmt.Printf("expected session to not be found if return code is 1\n")
-// 		t.FailNow()
-// 	}
-// }
-//
+
+import (
+	"fmt"
+	"reflect"
+	"testing"
+)
+
+func TestHasSession(t *testing.T) {
+	tt := map[string]tmuxTest {
+		"existing session": {
+			cmdRunner: mockCommand(),
+			expectedArgs: []string{"has-session", "-t", "session-name"},
+			expectedRes: true,
+			expectedErr: nil,
+		},
+		"non-existing session": {
+			cmdRunner: mockCommand(
+				withExitCodeone,
+			),
+			expectedArgs: []string{"has-session", "-t", "session-name"},
+			expectedRes: false,
+			expectedErr: nil,
+		},
+	}
+
+	for name, tc := range tt {
+		t.Run(name, func(t *testing.T) {
+			capturedArgs = nil
+			cmdRunner = tc.cmdRunner
+			res := HasSession("session-name")
+
+			if !reflect.DeepEqual(tc.expectedArgs, capturedArgs) {
+				failArgsDoNotMatch(t, tc.expectedArgs, capturedArgs)
+			}
+
+			if tc.expectedRes != res {
+				fmt.Printf("expected: %v, got: %v\n", tc.expectedRes, res)
+				t.FailNow()
+			}
+		})
+	}
+}
