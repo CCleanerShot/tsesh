@@ -21,13 +21,6 @@ SwitchClient:
 	- TestSwitchClientInsideTmux
 	- TestSwitchClientExist
 	- TestSwitchClientDoesNotExist
-
-NewSession:
-	✓ TestNewSessionArgs
-	- TestNewSessionOutsideTmux
-	- TestNewSessionInsideTmux
-	- TestNewSessionExists
-	- TestNewSessionDoesNotExist
 */
 
 /*
@@ -97,7 +90,7 @@ func TestArgs(t *testing.T) {
 		{
 			cmdRunner: mockCommand(),
 			testCmd: func() tea.Cmd {
-				return NewSession("test1", "/path/to/test1", false)
+				return NewSession("test1", "/path/to/test1")
 			},
 			expectedArgs: []string{"new-session", "-s", "test1", "-c", "/path/to/test1"},
 		},
@@ -125,6 +118,22 @@ func TestInsideTmux(t *testing.T) {
 				return Attach("attach-inside-tmux")
 			},
 			expectedErr: ErrNestedSession,
+		},
+		{
+			cmdRunner: mockCommand(),
+			testCmd: func() tea.Cmd {
+				return NewSession("new-session-unique-session", "/path/to/dir")
+			},
+			expectedErr: nil,
+		},
+		{
+			cmdRunner: mockCommand(
+				withDuplicateSession,
+			),
+			testCmd: func() tea.Cmd {
+				return NewSession("new-session-duplicate-session", "/path/to/dir")
+			},
+			expectedErr: ErrDuplicateSession,
 		},
 	}
 
@@ -165,6 +174,22 @@ func TestOutsideTmux(t *testing.T) {
 				return Attach("atttach-non-existing-session")
 			},
 			expectedErr: ErrSessionNotFound, 
+		},
+		{
+			cmdRunner: mockCommand(),
+			testCmd: func() tea.Cmd {
+				return NewSession("new-session-unique-session", "/path/to/dir")
+			},
+			expectedErr: nil,
+		},
+		{
+			cmdRunner: mockCommand(
+				withDuplicateSession,
+			),
+			testCmd: func() tea.Cmd {
+				return NewSession("new-session-duplicate-session", "/path/to/dir")
+			},
+			expectedErr: ErrDuplicateSession,
 		},
 	}
 
@@ -211,17 +236,13 @@ func mockCommand(mockOpts...mockOption) execCommand {
 	}
 }
 
-func withExitCodeOne(cmd *exec.Cmd) *exec.Cmd {
-	cmd.Env = append(cmd.Env, "MOCK_CMD_EXIT_CODE=1")
-	return cmd
-}
-
 func withNonExistingSession(cmd *exec.Cmd) *exec.Cmd {
 	cmd.Err = fmt.Errorf("can't find session") 
 	return cmd
 }
 
-func withOutsideTmuxEnv(cmd *exec.Cmd) *exec.Cmd {
+func withDuplicateSession(cmd *exec.Cmd) *exec.Cmd {
+	cmd.Err = fmt.Errorf("duplicate session")
 	return cmd
 }
 
