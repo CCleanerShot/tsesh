@@ -10,59 +10,66 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func TestAttach(t *testing.T) {
+func TestNewSession(t *testing.T) {
 	tt := map[string]tmuxTest {
-		"existing session outside tmux": {
+		"non-duplicate session outside tmux": {
 			insideTmux: false,
 			cmdRunner: mockCommand(),
-			expectedArgs: []string{"attach-session", "-t", "session-name"},
-			expectedErr: nil,
+			expectedArgs: []string{
+				"new-session", "-s", "session-name", "-c" , "/path/to/dir",
+			},
 		},
-		"existing session inside tmux": {
+		"non-duplicate session inside tmux": {
 			insideTmux: true,
 			cmdRunner: mockCommand(),
-			expectedArgs: nil,
-			expectedErr: ErrNestedSession,
+			expectedArgs: []string{
+				"new-session", "-ds", "session-name", "-c" , "/path/to/dir",
+			},
 		},
-		"non-existing session outside tmux": {
+		"duplicate session outside tmux": {
 			insideTmux: false,
 			cmdRunner: mockCommand(
-				withNonExistingSession,
+				withDuplicateSession,
 			),
-			expectedArgs: []string{"attach-session", "-t", "session-name"},
-			expectedErr: ErrSessionNotFound,
+			expectedArgs: []string{
+				"new-session", "-s", "session-name", "-c" , "/path/to/dir",
+			},
+			expectedErr: ErrDuplicateSession,
 		},
-		"non-existing session inside tmux": {
+		"duplicate session inside tmux": {
 			insideTmux: true,
 			cmdRunner: mockCommand(
-				withNonExistingSession,
+				withDuplicateSession,
 			),
-			expectedArgs: nil,
-			expectedErr: ErrNestedSession,
+			expectedArgs: []string{
+				"new-session", "-ds", "session-name", "-c" , "/path/to/dir",
+			},
+			expectedErr: ErrDuplicateSession,
 		},
 	}
 
 	for name, tc := range tt {
-		capturedArgs = nil 
+		capturedArgs = nil
+
 		t.Run(name, func(t *testing.T) {
 			tmuxEnvStr := ""
 			if tc.insideTmux {
 				tmuxEnvStr = "inside"
 			}
-			t.Setenv("TMUX", tmuxEnvStr)
+			t.Setenv("TMUX", tmuxEnvStr)	
 
 			cmdRunner = tc.cmdRunner
 			initModel := model {
-				testCmd: func () tea.Cmd {
-					return Attach("session-name")
+				testCmd: func() tea.Cmd {
+					return NewSession("session-name", "/path/to/dir")
 				},
 			}
-			
-			var in, out bytes.Buffer 
+
+			var in, out bytes.Buffer
 			p := tea.NewProgram(initModel, tea.WithInput(&in), tea.WithOutput(&out))
 			outModel, _ := p.Run()
 			finalModel := outModel.(model)
-			
+
 			if !errors.Is(tc.expectedErr, finalModel.Err) {
 				fmt.Printf("tea.Cmd returned something unexpected\n")
 				fmt.Printf("expected: %v, got: %v\n", tc.expectedErr, finalModel.Err)
