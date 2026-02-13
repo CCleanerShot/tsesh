@@ -16,17 +16,18 @@ func expandPath(path string) string {
 		home, _ := os.UserHomeDir()
 		expanded = filepath.Join(home, path[1:])
 	}
-	return expanded 
+	return expanded
 }
 
 func findDirectories(searchPaths []string) []list.Item {
 	m := make(map[string]Item)
 	dirList := []list.Item{}
 	for _, root := range searchPaths {
-		expandedRoot:= expandPath(root)
+		expandedRoot := expandPath(root)
 		filepath.WalkDir(expandedRoot, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				fmt.Printf("error while walking dir: %v\n", err)
+				return err
 			}
 
 			if !d.IsDir() {
@@ -35,12 +36,12 @@ func findDirectories(searchPaths []string) []list.Item {
 
 			sessionName := d.Name()
 			if strings.Contains(d.Name(), ".") {
-				sessionName = "_" + sessionName[1:]	
+				sessionName = "_" + sessionName[1:]
 			}
 			if ok := m[sessionName]; ok == (Item{}) {
-				item := Item {
-					SessionName: sessionName, 
-					Path: path, 
+				item := Item{
+					SessionName: sessionName,
+					Path:        path,
 				}
 				dirList = append(dirList, item)
 				m[sessionName] = item

@@ -9,7 +9,7 @@ import (
 // Wrapper for list.Item to add extra fields
 type Item struct {
 	SessionName string
-	Path string
+	Path        string
 	// TODO: at some point I should also add a configuration var for code that should be executed before and after entering the tmux session
 }
 
@@ -27,7 +27,7 @@ func (i Item) Description() string {
 
 type Picker struct {
 	List list.Model
-	Err error
+	Err  error
 }
 
 func (p Picker) Init() tea.Cmd {
@@ -65,17 +65,17 @@ func (p Picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if tmux.Inside() {
 					cmds = append(cmds, tmux.SwitchClient(choice.SessionName))
 				}
-				return p, tea.Sequence(cmds...) 
+				return p, tea.Sequence(cmds...)
 			}
 		}
-	
+
 	case tmux.TmuxMsg:
 		p.Err = msg.Err
 		return p, tea.Quit
 	}
 
 	p.List, cmd = p.List.Update(msg)
-	
+
 	return p, cmd
 }
 

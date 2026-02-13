@@ -11,18 +11,18 @@ import (
 )
 
 func TestAttach(t *testing.T) {
-	tt := map[string]tmuxTest {
+	tt := map[string]tmuxTest{
 		"existing session outside tmux": {
-			insideTmux: false,
-			cmdRunner: mockCommand(),
+			insideTmux:   false,
+			cmdRunner:    mockCommand(),
 			expectedArgs: []string{"attach-session", "-t", "session-name"},
-			expectedErr: nil,
+			expectedErr:  nil,
 		},
 		"existing session inside tmux": {
-			insideTmux: true,
-			cmdRunner: mockCommand(),
+			insideTmux:   true,
+			cmdRunner:    mockCommand(),
 			expectedArgs: nil,
-			expectedErr: ErrNestedSession,
+			expectedErr:  ErrNestedSession,
 		},
 		"non-existing session outside tmux": {
 			insideTmux: false,
@@ -30,7 +30,7 @@ func TestAttach(t *testing.T) {
 				withNonExistingSession,
 			),
 			expectedArgs: []string{"attach-session", "-t", "session-name"},
-			expectedErr: ErrSessionNotFound,
+			expectedErr:  ErrSessionNotFound,
 		},
 		"non-existing session inside tmux": {
 			insideTmux: true,
@@ -38,12 +38,12 @@ func TestAttach(t *testing.T) {
 				withNonExistingSession,
 			),
 			expectedArgs: nil,
-			expectedErr: ErrNestedSession,
+			expectedErr:  ErrNestedSession,
 		},
 	}
 
 	for name, tc := range tt {
-		capturedArgs = nil 
+		capturedArgs = nil
 
 		t.Run(name, func(t *testing.T) {
 			tmuxEnvStr := ""
@@ -53,17 +53,17 @@ func TestAttach(t *testing.T) {
 			t.Setenv("TMUX", tmuxEnvStr)
 
 			cmdRunner = tc.cmdRunner
-			initModel := model {
-				testCmd: func () tea.Cmd {
+			initModel := model{
+				testCmd: func() tea.Cmd {
 					return Attach("session-name")
 				},
 			}
-			
-			var in, out bytes.Buffer 
+
+			var in, out bytes.Buffer
 			p := tea.NewProgram(initModel, tea.WithInput(&in), tea.WithOutput(&out))
 			outModel, _ := p.Run()
 			finalModel := outModel.(model)
-			
+
 			if !errors.Is(tc.expectedErr, finalModel.Err) {
 				fmt.Printf("tea.Cmd returned something unexpected\n")
 				fmt.Printf("expected: %v, got: %v\n", tc.expectedErr, finalModel.Err)

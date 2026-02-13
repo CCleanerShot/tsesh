@@ -7,20 +7,20 @@ import (
 )
 
 func TestHasSession(t *testing.T) {
-	tt := map[string]tmuxTest {
+	tt := map[string]tmuxTest{
 		"existing session": {
-			cmdRunner: mockCommand(),
+			cmdRunner:    mockCommand(),
 			expectedArgs: []string{"has-session", "-t", "session-name"},
-			expectedRes: true,
-			expectedErr: nil,
+			expectedRes:  true,
+			expectedErr:  nil,
 		},
 		"non-existing session": {
 			cmdRunner: mockCommand(
 				withExitCodeone,
 			),
 			expectedArgs: []string{"has-session", "-t", "session-name"},
-			expectedRes: false,
-			expectedErr: nil,
+			expectedRes:  false,
+			expectedErr:  nil,
 		},
 	}
 

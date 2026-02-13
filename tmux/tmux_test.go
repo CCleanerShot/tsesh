@@ -17,21 +17,21 @@ Taking inspiration from bubbletea/exec_test.go of making a small tea program to 
 type mockOption func(*exec.Cmd) *exec.Cmd
 type execCommand func(string, ...string) *exec.Cmd
 type model struct {
-	testCmd func () tea.Cmd 
-	Err error
+	testCmd func() tea.Cmd
+	Err     error
 }
 type tmuxTest struct {
-	name string
-	insideTmux bool
-	cmdRunner execCommand
+	name         string
+	insideTmux   bool
+	cmdRunner    execCommand
 	expectedArgs []string
-	expectedRes any 
-	expectedErr error
+	expectedRes  any
+	expectedErr  error
 }
 
 /*
-important: clear out previous captured args since they will only update after 
-mockCommand is ran, which it wont if an error is expected prior to running the 
+important: clear out previous captured args since they will only update after
+mockCommand is ran, which it wont if an error is expected prior to running the
 cmdRunner
 */
 var capturedArgs []string
@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 		} else {
 			exitCode, _ = strconv.Atoi(codeStr)
 		}
-		
+
 		os.Exit(exitCode)
 	}
 
@@ -71,19 +71,19 @@ func TestMain(m *testing.M) {
 }
 
 // Unless another option that modifies the exit code is passed it will default to exiting with code 0
-func mockCommand(mockOpts...mockOption) execCommand {
-	return func(command string, args...string) *exec.Cmd {
+func mockCommand(mockOpts ...mockOption) execCommand {
+	return func(command string, args ...string) *exec.Cmd {
 		capturedArgs = args
 		testBinary := os.Args[0]
 
 		cs := []string{"--", command}
-		cs = append(cs, args...) 
+		cs = append(cs, args...)
 
 		cmd := exec.Command(testBinary, cs...)
 		cmd.Env = []string{
 			"GO_WANT_HELPER_PROCESS=1",
 		}
-		
+
 		for _, f := range mockOpts {
 			cmd = f(cmd)
 		}
@@ -98,7 +98,7 @@ func withExitCodeone(cmd *exec.Cmd) *exec.Cmd {
 }
 
 func withNonExistingSession(cmd *exec.Cmd) *exec.Cmd {
-	cmd.Err = fmt.Errorf("can't find session") 
+	cmd.Err = fmt.Errorf("can't find session")
 	return cmd
 }
 

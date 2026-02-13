@@ -11,12 +11,12 @@ import (
 )
 
 func TestSwitchClient(t *testing.T) {
-	tt := map[string]tmuxTest {
+	tt := map[string]tmuxTest{
 		"existing session inside tmux": {
-			insideTmux: true,
-			cmdRunner: mockCommand(),
+			insideTmux:   true,
+			cmdRunner:    mockCommand(),
 			expectedArgs: []string{"switch-client", "-t", "session-name"},
-			expectedErr: nil,
+			expectedErr:  nil,
 		},
 		"existing session outside tmux": {
 			insideTmux: false,
@@ -24,7 +24,7 @@ func TestSwitchClient(t *testing.T) {
 				withNoClient,
 			),
 			expectedArgs: []string{"switch-client", "-t", "session-name"},
-			expectedErr: ErrNoClientFound,
+			expectedErr:  ErrNoClientFound,
 		},
 		"non-existing session inside tmux": {
 			insideTmux: true,
@@ -32,7 +32,7 @@ func TestSwitchClient(t *testing.T) {
 				withNonExistingSession,
 			),
 			expectedArgs: []string{"switch-client", "-t", "session-name"},
-			expectedErr: ErrSessionNotFound,
+			expectedErr:  ErrSessionNotFound,
 		},
 		"non-existing session outside tmux": {
 			insideTmux: false,
@@ -40,7 +40,7 @@ func TestSwitchClient(t *testing.T) {
 				withNoClient,
 			),
 			expectedArgs: []string{"switch-client", "-t", "session-name"},
-			expectedErr: ErrNoClientFound,
+			expectedErr:  ErrNoClientFound,
 		},
 	}
 
@@ -54,8 +54,8 @@ func TestSwitchClient(t *testing.T) {
 			}
 			t.Setenv("TMUX", tmuxEnvStr)
 
-			cmdRunner = tc.cmdRunner	
-			initModel := model {
+			cmdRunner = tc.cmdRunner
+			initModel := model{
 				testCmd: func() tea.Cmd {
 					return SwitchClient("session-name")
 				},
@@ -70,7 +70,7 @@ func TestSwitchClient(t *testing.T) {
 				fmt.Printf("expected: %v, got: %v\n", tc.expectedErr, finalModel.Err)
 				t.FailNow()
 			}
-			
+
 			if !reflect.DeepEqual(tc.expectedArgs, capturedArgs) {
 				failArgsDoNotMatch(t, tc.expectedArgs, capturedArgs)
 			}

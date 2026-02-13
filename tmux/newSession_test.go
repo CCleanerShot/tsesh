@@ -11,19 +11,19 @@ import (
 )
 
 func TestNewSession(t *testing.T) {
-	tt := map[string]tmuxTest {
+	tt := map[string]tmuxTest{
 		"non-duplicate session outside tmux": {
 			insideTmux: false,
-			cmdRunner: mockCommand(),
+			cmdRunner:  mockCommand(),
 			expectedArgs: []string{
-				"new-session", "-s", "session-name", "-c" , "/path/to/dir",
+				"new-session", "-s", "session-name", "-c", "/path/to/dir",
 			},
 		},
 		"non-duplicate session inside tmux": {
 			insideTmux: true,
-			cmdRunner: mockCommand(),
+			cmdRunner:  mockCommand(),
 			expectedArgs: []string{
-				"new-session", "-ds", "session-name", "-c" , "/path/to/dir",
+				"new-session", "-ds", "session-name", "-c", "/path/to/dir",
 			},
 		},
 		"duplicate session outside tmux": {
@@ -32,7 +32,7 @@ func TestNewSession(t *testing.T) {
 				withDuplicateSession,
 			),
 			expectedArgs: []string{
-				"new-session", "-s", "session-name", "-c" , "/path/to/dir",
+				"new-session", "-s", "session-name", "-c", "/path/to/dir",
 			},
 			expectedErr: ErrDuplicateSession,
 		},
@@ -42,7 +42,7 @@ func TestNewSession(t *testing.T) {
 				withDuplicateSession,
 			),
 			expectedArgs: []string{
-				"new-session", "-ds", "session-name", "-c" , "/path/to/dir",
+				"new-session", "-ds", "session-name", "-c", "/path/to/dir",
 			},
 			expectedErr: ErrDuplicateSession,
 		},
@@ -56,10 +56,10 @@ func TestNewSession(t *testing.T) {
 			if tc.insideTmux {
 				tmuxEnvStr = "inside"
 			}
-			t.Setenv("TMUX", tmuxEnvStr)	
+			t.Setenv("TMUX", tmuxEnvStr)
 
 			cmdRunner = tc.cmdRunner
-			initModel := model {
+			initModel := model{
 				testCmd: func() tea.Cmd {
 					return NewSession("session-name", "/path/to/dir")
 				},

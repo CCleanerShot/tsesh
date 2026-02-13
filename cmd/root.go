@@ -11,17 +11,17 @@ import (
 )
 
 var (
-	rootCmd = &cobra.Command {
-		Use: "tsesh",
+	rootCmd = &cobra.Command{
+		Use:   "tsesh",
 		Short: "terminal sessionizer extending tmux",
-		Run: func (cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			cfg, err := config.Load()
 			if err != nil {
 				// TODO: this might want to be done through logging and only showup if there is a verbose flag
 				fmt.Printf("could not load configuration: %v\n", err)
 				fmt.Printf("using default paths: [\"~/\", \"~/projects\"]\n")
 				cfg = &config.Config{
-					SearchPaths: []string {
+					SearchPaths: []string{
 						"~/",
 						"~/projects",
 					},
@@ -37,7 +37,6 @@ var (
 		},
 	}
 )
-
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {

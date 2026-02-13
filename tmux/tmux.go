@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type TmuxMsg struct { Err error }
+type TmuxMsg struct{ Err error }
 
 var cmdRunner = exec.Command
 var ErrNestedSession = errors.New("sessions should be nested with care, unset $TMUX to force")
@@ -42,7 +42,7 @@ func Attach(sessionName string) tea.Cmd {
 	)
 }
 
-// Move active session to existing session if inside tmux 
+// Move active session to existing session if inside tmux
 func SwitchClient(sessionName string) tea.Cmd {
 	return tea.ExecProcess(
 		tmux("switch-client", "-t", sessionName),
@@ -60,14 +60,14 @@ func NewSession(sessionName, workingDirectory string) tea.Cmd {
 	return tea.ExecProcess(
 		tmux(
 			"new-session",
-			sessionFlags, sessionName, 
+			sessionFlags, sessionName,
 			"-c", workingDirectory,
 		),
 		execCallback,
-	) 
+	)
 }
 
-func tmux(args... string) *exec.Cmd {
+func tmux(args ...string) *exec.Cmd {
 	cmd := cmdRunner("tmux", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -77,15 +77,15 @@ func tmux(args... string) *exec.Cmd {
 
 func execCallback(err error) tea.Msg {
 	if err == nil {
-		return TmuxMsg {
+		return TmuxMsg{
 			Err: nil,
 		}
 	}
-		
+
 	var tmuxErr error
 	if strings.Contains(err.Error(), "can't find session") {
 		tmuxErr = ErrSessionNotFound
-	} 
+	}
 	if strings.Contains(err.Error(), "duplicate session") {
 		tmuxErr = ErrDuplicateSession
 	}
@@ -93,13 +93,13 @@ func execCallback(err error) tea.Msg {
 		tmuxErr = ErrNoClientFound
 	}
 
-	return TmuxMsg {
+	return TmuxMsg{
 		Err: tmuxErr,
 	}
 }
 
 func nestedSessionsNotAllowed() tea.Msg {
-	return TmuxMsg {
+	return TmuxMsg{
 		Err: ErrNestedSession,
 	}
 }
